@@ -1,0 +1,253 @@
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface UserData {
+  id?: string;
+  email: string;
+  name: string;
+}
+
+export interface FitnessProfile {
+  age: number;
+  weight: number;
+  height: number;
+  fitnessLevel: string;
+  goals: string[];
+  restrictions: string;
+}
+
+export interface Exercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: string;
+  rest: string;
+}
+
+export interface WorkoutDay {
+  id: string;
+  day: string;
+  exercises: Exercise[];
+}
+
+export interface WorkoutPlan {
+  days: WorkoutDay[];
+}
+
+export interface Meal {
+  id: string;
+  name: string;
+  calories: number;
+  time: string;
+}
+
+export interface NutritionPlan {
+  dailyCalories: number;
+  macros: { protein: number; carbs: number; fats: number };
+  meals: Meal[];
+}
+
+export interface ProgressData {
+  date: string;
+  weight: number;
+  workoutCompleted: boolean;
+  notes: string;
+}
+
+interface UserContextType {
+  userData: UserData | null;
+  setUserData: (data: UserData) => void;
+  fitnessProfile: FitnessProfile | null;
+  setFitnessProfile: (profile: FitnessProfile) => void;
+  workoutPlan: WorkoutPlan | null;
+  setWorkoutPlan: (plan: WorkoutPlan) => void;
+  nutritionPlan: NutritionPlan | null;
+  setNutritionPlan: (plan: NutritionPlan) => void;
+  progressHistory: ProgressData[];
+  addProgress: (progress: ProgressData) => void;
+  addExercise: (dayId: string, exercise: Omit<Exercise, 'id'>) => void;
+  updateExercise: (dayId: string, exerciseId: string, exercise: Omit<Exercise, 'id'>) => void;
+  deleteExercise: (dayId: string, exerciseId: string) => void;
+  addWorkoutDay: (day: Omit<WorkoutDay, 'id'>) => void;
+  updateWorkoutDay: (dayId: string, day: Omit<WorkoutDay, 'id' | 'exercises'>) => void;
+  deleteWorkoutDay: (dayId: string) => void;
+  addMeal: (meal: Omit<Meal, 'id'>) => void;
+  updateMeal: (mealId: string, meal: Omit<Meal, 'id'>) => void;
+  deleteMeal: (mealId: string) => void;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+const storedUserData = () => {
+  try {
+    const value = window.localStorage.getItem("fitai_user");
+    return value ? (JSON.parse(value) as UserData) : null;
+  } catch {
+    return null;
+  }
+};
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [userData, setUserDataState] = useState<UserData | null>(storedUserData);
+  const [fitnessProfile, setFitnessProfile] = useState<FitnessProfile | null>(null);
+  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
+  const [nutritionPlan, setNutritionPlan] = useState<NutritionPlan | null>(null);
+  const [progressHistory, setProgressHistory] = useState<ProgressData[]>([]);
+
+  const setUserData = (data: UserData) => {
+    setUserDataState(data);
+    window.localStorage.setItem("fitai_user", JSON.stringify(data));
+  };
+
+  const addProgress = (progress: ProgressData) => {
+    setProgressHistory(prev => [...prev, progress]);
+  };
+
+  // Workout CRUD operations
+  const addExercise = (dayId: string, exercise: Omit<Exercise, 'id'>) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        days: prev.days.map(day =>
+          day.id === dayId
+            ? { ...day, exercises: [...day.exercises, { ...exercise, id: Date.now().toString() }] }
+            : day
+        )
+      };
+    });
+  };
+
+  const updateExercise = (dayId: string, exerciseId: string, exercise: Omit<Exercise, 'id'>) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        days: prev.days.map(day =>
+          day.id === dayId
+            ? {
+                ...day,
+                exercises: day.exercises.map(ex =>
+                  ex.id === exerciseId ? { ...exercise, id: exerciseId } : ex
+                )
+              }
+            : day
+        )
+      };
+    });
+  };
+
+  const deleteExercise = (dayId: string, exerciseId: string) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        days: prev.days.map(day =>
+          day.id === dayId
+            ? { ...day, exercises: day.exercises.filter(ex => ex.id !== exerciseId) }
+            : day
+        )
+      };
+    });
+  };
+
+  const addWorkoutDay = (day: Omit<WorkoutDay, 'id'>) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return { days: [{ ...day, id: Date.now().toString() }] };
+      return {
+        ...prev,
+        days: [...prev.days, { ...day, id: Date.now().toString() }]
+      };
+    });
+  };
+
+  const updateWorkoutDay = (dayId: string, day: Omit<WorkoutDay, 'id' | 'exercises'>) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        days: prev.days.map(d =>
+          d.id === dayId ? { ...d, ...day } : d
+        )
+      };
+    });
+  };
+
+  const deleteWorkoutDay = (dayId: string) => {
+    setWorkoutPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        days: prev.days.filter(d => d.id !== dayId)
+      };
+    });
+  };
+
+  // Nutrition CRUD operations
+  const addMeal = (meal: Omit<Meal, 'id'>) => {
+    setNutritionPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        meals: [...prev.meals, { ...meal, id: Date.now().toString() }]
+      };
+    });
+  };
+
+  const updateMeal = (mealId: string, meal: Omit<Meal, 'id'>) => {
+    setNutritionPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        meals: prev.meals.map(m =>
+          m.id === mealId ? { ...meal, id: mealId } : m
+        )
+      };
+    });
+  };
+
+  const deleteMeal = (mealId: string) => {
+    setNutritionPlan(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        meals: prev.meals.filter(m => m.id !== mealId)
+      };
+    });
+  };
+
+  return (
+    <UserContext.Provider
+      value={{
+        userData,
+        setUserData,
+        fitnessProfile,
+        setFitnessProfile,
+        workoutPlan,
+        setWorkoutPlan,
+        nutritionPlan,
+        setNutritionPlan,
+        progressHistory,
+        addProgress,
+        addExercise,
+        updateExercise,
+        deleteExercise,
+        addWorkoutDay,
+        updateWorkoutDay,
+        deleteWorkoutDay,
+        addMeal,
+        updateMeal,
+        deleteMeal,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+export function useUser() {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+}
