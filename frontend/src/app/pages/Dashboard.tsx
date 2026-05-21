@@ -84,7 +84,11 @@ export default function Dashboard() {
                     <CardDescription>Phân bổ macro để đạt kết quả tối ưu</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Calories</p>
+                        <p className="text-2xl font-bold text-red-600">{nutritionPlan?.dailyCalories}cal</p>
+                      </div>
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
                         <p className="text-sm text-gray-600">Protein</p>
                         <p className="text-2xl font-bold text-blue-600">{nutritionPlan?.macros.protein}g</p>
