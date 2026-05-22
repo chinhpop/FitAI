@@ -540,7 +540,7 @@ export const generateFitnessPlans = async (
         },
       ],
 
-      maxTokens: 3000,
+      maxTokens: 5000,
 
       temperature: 0.2,
     });

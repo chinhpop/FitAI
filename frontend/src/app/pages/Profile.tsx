@@ -128,6 +128,13 @@ export default function Profile() {
             </div>
 
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-slate-500 text-sm">Giới tính</span>
+              <span className="font-medium text-slate-100 text-sm">
+                {fitnessProfile?.gender === "male" ? "Nam" : "Nữ"}
+                </span>
+            </div>
+
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <span className="text-slate-500 text-sm">Email</span>
 
               <span className="font-medium text-slate-100 text-sm">
